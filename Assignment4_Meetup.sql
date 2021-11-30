@@ -28,6 +28,7 @@ CREATE TABLE a4_user (
     CONSTRAINT usr_id_pk PRIMARY KEY ( iduser )
 );
 
+
 INSERT INTO a4_user (
     iduser,
     firstname,
@@ -43,7 +44,7 @@ INSERT INTO a4_user (
     'georgewashington@usa.com',
     'TheFather',
     '123456',
-    '21-NOV-2021'
+    '21-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -61,7 +62,7 @@ INSERT INTO a4_user (
     'johnadams@usa.com',
     'TheColossus',
     'p1p1p1',
-    '22-NOV-2021'
+    '22-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -79,7 +80,7 @@ INSERT INTO a4_user (
     'thomasjefferson@usa.com',
     'TheApostle',
     '123123',
-    '23-NOV-2021'
+    '23-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -97,7 +98,7 @@ INSERT INTO a4_user (
     'j@usa.com',
     'LilJemmy',
     '123123',
-    '27-NOV-2021'
+    '27-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -115,7 +116,7 @@ INSERT INTO a4_user (
     'jmon@usa.com',
     'BigJemmy',
     '123123',
-    '27-NOV-2021'
+    '27-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -133,7 +134,7 @@ INSERT INTO a4_user (
     'jadams@usa.com',
     'LittleJohn',
     '123123',
-    '27-NOV-2021'
+    '27-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -151,7 +152,7 @@ INSERT INTO a4_user (
     'andrew@usa.com',
     'LilAndrew',
     '123123',
-    '27-NOV-2021'
+    '27-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -169,7 +170,7 @@ INSERT INTO a4_user (
     'martin@usa.com',
     'LittleMartini',
     '123123',
-    '27-NOV-2021'
+    '27-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -187,7 +188,7 @@ INSERT INTO a4_user (
     'wilharr@usa.com',
     'BigWilly',
     '123123',
-    '27-NOV-2021'
+    '27-NOV-2009'
 );
 
 INSERT INTO a4_user (
@@ -205,13 +206,8 @@ INSERT INTO a4_user (
     'trump@usa.com',
     'TheDonald',
     '123123',
-    '27-NOV-2021'
+    '27-NOV-2009'
 );
-
-SELECT
-    *
-FROM
-    a4_user;
     
 --MeetupStatus
 
@@ -253,11 +249,6 @@ INSERT INTO a4_meetupstatus (
     'Cancelled'
 );
 
-SELECT
-    *
-FROM
-    a4_meetupstatus;
-
 --Meetup
 
 CREATE TABLE a4_meetup (
@@ -275,6 +266,7 @@ CREATE TABLE a4_meetup (
         REFERENCES a4_user ( iduser ),
     CONSTRAINT mtp_statusid_pk FOREIGN KEY ( meetupstatusid )
         REFERENCES a4_meetupstatus ( meetupstatusid )
+    ON DELETE CASCADE
 );
 
 INSERT INTO a4_meetup (
@@ -465,7 +457,7 @@ INSERT INTO a4_meetup (
     meetupstatusid
 ) VALUES (
     9,
-    1,
+    6,
     'Friday Breakfast',
     'lets eat and enjoy some burittos',
     'shorturl.at/doqrQ',
@@ -487,14 +479,14 @@ INSERT INTO a4_meetup (
     meetupstatusid
 ) VALUES (
     10,
-    1,
+    10,
     'Golf and Chill',
     'Let us hang and behold this golf activity. ',
     'shorturl.at/doqrQ',
     'Costa Rica',
     '14-DECEMBER-2021',
     '17-DECEMBER-2021',
-    2
+    3
 );
 
 INSERT INTO a4_meetup (
@@ -518,7 +510,6 @@ INSERT INTO a4_meetup (
     '2-OCTOBER-2010',
     2
 );
-
 INSERT INTO a4_meetup (
     idmeetup,
     idcreator,
@@ -541,11 +532,6 @@ INSERT INTO a4_meetup (
     2
 );
 
-SELECT
-    *
-FROM
-    a4_meetup;
-
 --MeetupUser
 
 CREATE TABLE a4_meetupuser (
@@ -554,12 +540,14 @@ CREATE TABLE a4_meetupuser (
     idmeetup       NUMBER(8),
     CONSTRAINT mtpuser_idmeetupuser_pk PRIMARY KEY ( idmeetupuser ),
     CONSTRAINT mtpuser_iduser_fk FOREIGN KEY ( iduser )
-        REFERENCES a4_user ( iduser ),
+        
+        REFERENCES a4_user ( iduser )
+        ON DELETE CASCADE,
     CONSTRAINT mtpuser_idmeetup_fk FOREIGN KEY ( idmeetup )
         REFERENCES a4_meetup ( idmeetup )
+            ON DELETE CASCADE
 );
 --Favorite
-select * from a4_meetup;
 CREATE TABLE a4_favorite (
     idfavorite   NUMBER(3),
     idmeetup     NUMBER(8),
@@ -587,6 +575,26 @@ INSERT INTO a4_favorite(idfavorite,idmeetup,iduser) VALUES(13,7,6);
 INSERT INTO a4_favorite(idfavorite,idmeetup,iduser) VALUES(14,11,7);
 INSERT INTO a4_favorite(idfavorite,idmeetup,iduser) VALUES(15,5,5);
 
+CREATE OR REPLACE FUNCTION get_meetupstatusid(
+    meetupstart1 DATE,
+    meetupend1 DATE
+) 
+RETURN a4_meetupstatus.meetupstatusid%type
+IS
+    meetupstatusid1 a4_meetupstatus.meetupstatusid%type;
+BEGIN
+        IF CURRENT_DATE > meetupend1 THEN 
+        meetupstatusid1 := 2;
+        ELSIF CURRENT_DATE < meetupstart1 THEN 
+        meetupstatusid1 := 3;
+        ELSE
+        meetupstatusid1 := 1;
+        END IF;
+    
+    -- return the total sales
+    RETURN meetupstatusid1;
+END;
+
 CREATE OR REPLACE PROCEDURE insertmeetup (
     idcreator1        IN   a4_meetup.idcreator%TYPE,
     meetupname1       IN   a4_meetup.meetupname%TYPE,
@@ -600,13 +608,7 @@ CREATE OR REPLACE PROCEDURE insertmeetup (
     meetupstatusid1 a4_meetup.meetupstatusid%TYPE;
 BEGIN
 
-    IF CURRENT_DATE > meetupend1 THEN 
-    meetupstatusid1 := 2;
-    ELSIF CURRENT_DATE < meetupstart1 THEN 
-    meetupstatusid1 := 3;
-    ELSE
-    meetupstatusid1 := 1;
-    END IF;
+    meetupstatusid1 := get_meetupstatusid(meetupstart1, meetupend1);
     INSERT INTO a4_meetup (
         idmeetup,
         idcreator,
@@ -647,7 +649,7 @@ BEGIN
         idmeetup1
     );
 END insertmeetupuser;
-select * from a4_user;
+
 -- Signing up every user into available meetups for test purposes
 DECLARE
     counter INT := 0;
@@ -681,4 +683,79 @@ BEGIN
     END LOOP;
 END;
 
-select * from a4_meetupuser;
+CREATE TABLE a4_deleted_user AS (select * from a4_user WHERE 1=2);
+
+CREATE OR REPLACE TRIGGER a4_delete_user_trigger BEFORE
+    DELETE ON a4_user
+    FOR EACH ROW
+BEGIN
+    INSERT INTO a4_deleted_user (
+        iduser,
+        firstname,
+        lastname,
+        email,
+        username,
+        userpassword,
+        accountdate
+    ) VALUES (
+        :old.iduser,
+        :old.firstname,
+        :old.lastname,
+        :old.email,
+        :old.username,
+        :old.userpassword,
+        :old.accountdate
+    );
+
+END;
+
+CREATE OR REPLACE TRIGGER a4_meetup_trigger
+BEFORE INSERT OR UPDATE ON a4_meetup
+FOR EACH ROW
+DECLARE
+    meetupstart1 DATE := :NEW.meetupstart;
+    meetupend1 DATE := :NEW.meetupend;
+BEGIN
+        IF CURRENT_DATE > meetupend1 THEN 
+        :NEW.meetupstatusid := 2;
+        ELSIF CURRENT_DATE < meetupstart1 THEN 
+        :NEW.meetupstatusid := 3;
+        ELSE
+        :NEW.meetupstatusid := 1;
+        END IF;
+END;
+
+--wrong entry fixed by the trigger
+INSERT INTO a4_meetup (
+    idmeetup,
+    idcreator,
+    meetupname,
+    description,
+    meetupimage,
+    meetuplocation,
+    meetupstart,
+    meetupend,
+    meetupstatusid
+) VALUES (
+    25,
+    6,
+    'New Years Party',
+    'let us get drunk',
+    'shorturl.at/doqrQ',
+    'Philly',
+    '31-DECEMBER-2022',
+    '1-JANUARY-2022',
+    2
+);
+
+select * from a4_meetup;
+select * from a4_user;
+select * from a4_favorite join a4_user on a4_favorite.iduser = a4_user.iduser  join a4_meetup on a4_meetup.idmeetup = a4_favorite.idmeetup;
+
+DELETE
+FROM
+    a4_user
+WHERE
+    iduser = 3;
+    
+select * from a4_meetupuser join a4_meetup on a4_meetup.idmeetup = a4_meetupuser.idmeetup join a4_user on a4_meetupuser.iduser = a4_user.iduser;
